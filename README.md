@@ -260,6 +260,102 @@ See [`docs/architechture_overview.md`](docs/architechture_overview.md) for:
 - STIG CAT I compliance implications
 - Design patterns used throughout the codebase
 
+## Developer Setup — Pre-Commit Hooks
+
+Pre-commit hooks run **automatically on every `git commit`** and block the commit if any check fails.  This is the first line of defense — CI should never fail because of lint, format, or type errors.
+
+### One-Time Setup (after cloning)
+
+```bash
+# Install the pre-commit framework
+pip install pre-commit
+
+# Install the hooks into .git/hooks
+pre-commit install
+
+# Verify hooks are active (runs against entire repo)
+pre-commit run --all-files
+```
+
+### Emergency Bypass
+
+```bash
+# Skips ALL hooks — document the reason in the commit message
+git commit --no-verify -m "EMERGENCY: <reason>"
+```
+
+> [!WARNING]
+> `--no-verify` bypasses **all** pre-commit hooks.  Use only in genuine emergencies.  CI will still catch violations — this just skips the local gate.
+
+### Developer Convenience (Makefile)
+
+Run checks manually at any time:
+
+```bash
+make lint          # ruff check app/ tests/ --fix
+make format        # ruff format app/ tests/
+make typecheck     # mypy app/
+make test          # pytest tests/unit/ -v -x
+make test-all      # pytest tests/ -v
+make check         # lint + format + typecheck (mirrors pre-commit)
+make install-hooks # pre-commit install
+```
+
+---
+
+## Standard Operating Procedure — Commit Workflow
+
+```
+1. Write code
+2. Stage changes:           git add <files>
+3. Commit:                  git commit -m "descriptive message"
+   → Pre-commit hooks run automatically:
+     a. ruff check (lint — auto-fixes where possible)
+     b. ruff format (format — auto-fixes in place)
+     c. mypy (type check — no auto-fix, you must correct manually)
+     d. Whitespace, EOF, YAML, large file, private key checks
+   → If any hook fails:
+     • Auto-fixable: files are modified. Re-stage (git add) and re-commit.
+     • Manual fix required: read the error, fix the code, re-stage, re-commit.
+4. Push to remote:          git push origin <branch>
+5. CI pipeline runs full suite (lint + types + unit + integration)
+6. Open PR when ready → CI must pass → 1 review required → merge
+```
+
+---
+
+## Commit Message Convention
+
+We follow **[Conventional Commits](https://www.conventionalcommits.org/)**:
+
+```
+<type>(<scope>): <short description>
+```
+
+| Type       | Use When                                               |
+|------------|--------------------------------------------------------|
+| `feat`     | New feature                                            |
+| `fix`      | Bug fix                                                |
+| `refactor` | Code change that neither fixes a bug nor adds a feature|
+| `docs`     | Documentation only                                     |
+| `test`     | Adding or updating tests                               |
+| `chore`    | Build, CI, dependency updates                          |
+| `style`    | Formatting, whitespace (no logic change)               |
+
+**Scope** *(optional)*: `router`, `service`, `adapter`, `model`, `middleware`, `config`
+
+**Examples:**
+
+```
+feat(router): add project CRUD endpoints
+fix(service): enforce state transition validation in assessment_service
+test(repo): add integration tests for project_repo
+chore(ci): add mypy to pre-commit hooks
+```
+
+> [!NOTE]
+> Commit message format is a **team convention** — it is not enforced by a hook.  A `commitlint` hook can be added later if the team wants enforcement.
+
 ---
 
 ## Team

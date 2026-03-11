@@ -1,0 +1,46 @@
+# ──────────────────────────────────────────────────────────────
+# Pre-commit hooks for ares-api
+# Docs: https://pre-commit.com
+# ──────────────────────────────────────────────────────────────
+
+repos:
+  # ── Ruff (lint + format) ──────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      # Hook 1: Lint — auto-fixes where possible
+      - id: ruff
+        args: [--fix]
+
+      # Hook 2: Format — reformats in place
+      - id: ruff-format
+
+  # ── mypy (type check) ────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (type check)
+        entry: mypy app/
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  # ── General hygiene ──────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Hook 4: Strip trailing whitespace
+      - id: trailing-whitespace
+
+      # Hook 5: Ensure files end with a single newline
+      - id: end-of-file-fixer
+
+      # Hook 6: Validate YAML syntax
+      - id: check-yaml
+
+      # Hook 7: Block large files (> 500 KB)
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+      # Hook 8: Scan for private key patterns (STIG compliance)
+      - id: detect-private-key
